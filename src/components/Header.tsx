@@ -6,7 +6,7 @@ const Header: React.FC = () => {
       <div className="container mx-auto px-4 py-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Predecessor Stats</h1>
+            <h1 className="text-3xl font-bold text-gray-800">Predecessor Stats</h1>
             <p className="text-gray-600 mt-1">Team Dashboard for gravefolk, amodestone, anegotisticalone & laggingloki</p>
           </div>
           

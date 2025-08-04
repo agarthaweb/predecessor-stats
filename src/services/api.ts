@@ -8,8 +8,13 @@ import type {
   CommonTeammate,
   GameMode
 } from '../types';
+import { mockPlayerApi } from './mockData';
+import { realPlayerApi } from './realApi';
 
-const API_BASE_URL = 'https://api.predecessor.com';
+// Try real API first, fallback to mock data
+const TRY_REAL_API_FIRST = true;
+
+const API_BASE_URL = '/api';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -29,13 +34,33 @@ api.interceptors.response.use(
 
 export const playerApi = {
   getPlayerByUsername: async (username: string): Promise<Player> => {
-    const response = await api.get(`/players.json?username=${username}`);
-    return response.data;
+    if (TRY_REAL_API_FIRST) {
+      try {
+        console.log(`Attempting to fetch real data for ${username}...`);
+        const realData = await realPlayerApi.getPlayerByUsername(username);
+        console.log(`✅ Successfully fetched real data for ${username}`);
+        return realData;
+      } catch (error) {
+        console.log(`❌ Real API failed for ${username}, falling back to mock data:`, error);
+        return mockPlayerApi.getPlayerByUsername(username);
+      }
+    }
+    return mockPlayerApi.getPlayerByUsername(username);
   },
 
   getPlayerStatistics: async (playerId: string): Promise<PlayerStatistics> => {
-    const response = await api.get(`/players/${playerId}/statistics.json`);
-    return response.data;
+    if (TRY_REAL_API_FIRST) {
+      try {
+        console.log(`Attempting to fetch real statistics for ${playerId}...`);
+        const realStats = await realPlayerApi.getPlayerStatistics(playerId);
+        console.log(`✅ Successfully fetched real statistics for ${playerId}`);
+        return realStats;
+      } catch (error) {
+        console.log(`❌ Real API failed for ${playerId} stats, falling back to mock data:`, error);
+        return mockPlayerApi.getPlayerStatistics(playerId);
+      }
+    }
+    return mockPlayerApi.getPlayerStatistics(playerId);
   },
 
   getPlayerMatches: async (
@@ -43,12 +68,18 @@ export const playerApi = {
     limit: number = 20,
     gameMode?: GameMode
   ): Promise<Match[]> => {
-    const params = new URLSearchParams({
-      limit: limit.toString(),
-      ...(gameMode && { game_mode: gameMode }),
-    });
-    const response = await api.get(`/players/${playerId}/matches.json?${params}`);
-    return response.data;
+    if (TRY_REAL_API_FIRST) {
+      try {
+        console.log(`Attempting to fetch real matches for ${playerId}...`);
+        const realMatches = await realPlayerApi.getPlayerMatches(playerId, limit);
+        console.log(`✅ Successfully fetched real matches for ${playerId}`);
+        return realMatches;
+      } catch (error) {
+        console.log(`❌ Real API failed for ${playerId} matches, falling back to mock data:`, error);
+        return mockPlayerApi.getPlayerMatches(playerId, limit);
+      }
+    }
+    return mockPlayerApi.getPlayerMatches(playerId, limit);
   },
 
   getPlayerHeroStatistics: async (playerId: string): Promise<HeroStatistics[]> => {
