@@ -1,5 +1,9 @@
 import type { Player, PlayerStatistics, Match, MatchPlayer } from '../types';
 
+// Debug toggle for real API calls - should match the setting in api.ts
+// Set to false to disable debug logging of external API calls and data transformation
+const DEBUG_API_CALLS = true;
+
 // Real player IDs
 const PLAYER_IDS = {
   gravefolk: 'ff56b1e0-9290-4ba3-8065-190576c12063',
@@ -30,9 +34,11 @@ export const realPlayerApi = {
       throw new Error(`Player ${username} not found in known IDs`);
     }
 
+    if (DEBUG_API_CALLS) console.log(`🌐 [DEBUGGER] Fetching raw player data from omeda.city for ${username} (${playerId})`);
     const playerData = await fetchWithHeaders(`https://omeda.city/players/${playerId}.json`);
+    if (DEBUG_API_CALLS) console.log(`📥 [DEBUGGER] Raw API response for ${username}:`, playerData);
     
-    return {
+    const transformedData = {
       id: playerId,
       username: playerData.display_name || username,
       level: playerData.vp_total || 0,
@@ -41,15 +47,17 @@ export const realPlayerApi = {
       mmr: playerData.vp_current || 0,
       region: playerData.region || 'unknown',
     };
+    
+    if (DEBUG_API_CALLS) console.log(`🔄 [DEBUGGER] Transformed player data for ${username}:`, transformedData);
+    return transformedData;
   },
 
   getPlayerStatistics: async (playerId: string): Promise<PlayerStatistics> => {
+    if (DEBUG_API_CALLS) console.log(`🌐 [DEBUGGER] Fetching raw statistics data from omeda.city for ${playerId}`);
     const statsData = await fetchWithHeaders(`https://omeda.city/players/${playerId}/statistics.json`);
+    if (DEBUG_API_CALLS) console.log(`📥 [DEBUGGER] Raw statistics API response for ${playerId}:`, statsData);
     
-    // Debug: log the actual data structure (can be removed after testing)
-    // console.log('Raw stats data for', playerId, ':', statsData);
-    
-    return {
+    const transformedStats = {
       player_id: playerId,
       wins: Math.round(statsData.matches_played * statsData.winrate),
       losses: Math.round(statsData.matches_played * (1 - statsData.winrate)),
@@ -64,16 +72,25 @@ export const realPlayerApi = {
       matches_played: statsData.matches_played,
       time_played: statsData.hours_played * 3600,
     };
+    
+    if (DEBUG_API_CALLS) console.log(`🔄 [DEBUGGER] Transformed statistics data for ${playerId}:`, transformedStats);
+    return transformedStats;
   },
 
   getPlayerMatches: async (playerId: string, limit: number = 20): Promise<Match[]> => {
     try {
+      if (DEBUG_API_CALLS) console.log(`🌐 [DEBUGGER] Fetching raw matches data from omeda.city for ${playerId}`);
       const matchesData = await fetchWithHeaders(`https://omeda.city/players/${playerId}/matches.json`);
-      // console.log('Raw matches data for', playerId, ':', matchesData);
+      if (DEBUG_API_CALLS) console.log(`📥 [DEBUGGER] Raw matches API response for ${playerId}:`, {
+        total_matches: matchesData?.matches?.length || 0,
+        structure: matchesData ? Object.keys(matchesData) : 'No data',
+        sample_match: matchesData?.matches?.[0] || 'No matches'
+      });
       
       // The API returns { matches: [...] } structure
       if (matchesData && matchesData.matches && Array.isArray(matchesData.matches)) {
         const rawMatches = matchesData.matches.slice(0, limit);
+        if (DEBUG_API_CALLS) console.log(`🔄 [DEBUGGER] Processing ${rawMatches.length} matches for ${playerId}`);
         
         // Transform raw API data to our Match interface
         return rawMatches.map((rawMatch: any): Match => {
@@ -113,10 +130,10 @@ export const realPlayerApi = {
         });
       }
       
-      // console.log('Unexpected matches data structure for', playerId);
+      if (DEBUG_API_CALLS) console.log(`❌ [DEBUGGER] Unexpected matches data structure for ${playerId}:`, matchesData);
       return [];
     } catch (error) {
-      // console.log('Failed to fetch matches for', playerId, ':', error);
+      if (DEBUG_API_CALLS) console.log(`❌ [DEBUGGER] Failed to fetch matches for ${playerId}:`, error);
       return [];
     }
   },

@@ -14,6 +14,11 @@ import { realPlayerApi } from './realApi';
 // Try real API first, fallback to mock data
 const TRY_REAL_API_FIRST = true;
 
+// Debug toggle - set to false to disable debug logging
+// When enabled, detailed API call information will be logged to the browser console
+// including raw API responses, transformed data, and player performance metrics
+const DEBUG_API_CALLS = true;
+
 const API_BASE_URL = '/api';
 
 const api = axios.create({
@@ -36,31 +41,60 @@ export const playerApi = {
   getPlayerByUsername: async (username: string): Promise<Player> => {
     if (TRY_REAL_API_FIRST) {
       try {
-        console.log(`Attempting to fetch real data for ${username}...`);
+        if (DEBUG_API_CALLS) console.log(`🔍 [DEBUGGER] Attempting to fetch real data for ${username}...`);
         const realData = await realPlayerApi.getPlayerByUsername(username);
-        console.log(`✅ Successfully fetched real data for ${username}`);
+        if (DEBUG_API_CALLS) console.log(`✅ [DEBUGGER] Successfully fetched real data for ${username}`);
+        if (DEBUG_API_CALLS) console.log(`📊 [DEBUGGER] Player data for ${username}:`, {
+          id: realData.id,
+          username: realData.username,
+          level: realData.level,
+          rank: realData.rank,
+          rank_tier: realData.rank_tier,
+          mmr: realData.mmr,
+          region: realData.region,
+          avatar_url: realData.avatar_url
+        });
         return realData;
       } catch (error) {
-        console.log(`❌ Real API failed for ${username}, falling back to mock data:`, error);
-        return mockPlayerApi.getPlayerByUsername(username);
+        if (DEBUG_API_CALLS) console.log(`❌ [DEBUGGER] Real API failed for ${username}, falling back to mock data:`, error);
+        const mockData = await mockPlayerApi.getPlayerByUsername(username);
+        if (DEBUG_API_CALLS) console.log(`📊 [DEBUGGER] Mock player data for ${username}:`, mockData);
+        return mockData;
       }
     }
-    return mockPlayerApi.getPlayerByUsername(username);
+    const mockData = await mockPlayerApi.getPlayerByUsername(username);
+    console.log(`📊 [DEBUGGER] Mock player data for ${username}:`, mockData);
+    return mockData;
   },
 
   getPlayerStatistics: async (playerId: string): Promise<PlayerStatistics> => {
     if (TRY_REAL_API_FIRST) {
       try {
-        console.log(`Attempting to fetch real statistics for ${playerId}...`);
+        if (DEBUG_API_CALLS) console.log(`🔍 [DEBUGGER] Attempting to fetch real statistics for ${playerId}...`);
         const realStats = await realPlayerApi.getPlayerStatistics(playerId);
-        console.log(`✅ Successfully fetched real statistics for ${playerId}`);
+        if (DEBUG_API_CALLS) console.log(`✅ [DEBUGGER] Successfully fetched real statistics for ${playerId}`);
+        if (DEBUG_API_CALLS) console.log(`📈 [DEBUGGER] Player statistics for ${playerId}:`, {
+          wins: realStats.wins,
+          losses: realStats.losses,
+          win_rate: `${(realStats.win_rate * 100).toFixed(1)}%`,
+          matches_played: realStats.matches_played,
+          kda: realStats.kda.toFixed(2),
+          avg_kills: realStats.avg_kills.toFixed(1),
+          avg_deaths: realStats.avg_deaths.toFixed(1),
+          avg_assists: realStats.avg_assists.toFixed(1),
+          time_played: `${(realStats.time_played / 3600).toFixed(1)} hours`
+        });
         return realStats;
       } catch (error) {
-        console.log(`❌ Real API failed for ${playerId} stats, falling back to mock data:`, error);
-        return mockPlayerApi.getPlayerStatistics(playerId);
+        if (DEBUG_API_CALLS) console.log(`❌ [DEBUGGER] Real API failed for ${playerId} stats, falling back to mock data:`, error);
+        const mockStats = await mockPlayerApi.getPlayerStatistics(playerId);
+        if (DEBUG_API_CALLS) console.log(`📈 [DEBUGGER] Mock player statistics for ${playerId}:`, mockStats);
+        return mockStats;
       }
     }
-    return mockPlayerApi.getPlayerStatistics(playerId);
+    const mockStats = await mockPlayerApi.getPlayerStatistics(playerId);
+    console.log(`📈 [DEBUGGER] Mock player statistics for ${playerId}:`, mockStats);
+    return mockStats;
   },
 
   getPlayerMatches: async (
@@ -70,16 +104,35 @@ export const playerApi = {
   ): Promise<Match[]> => {
     if (TRY_REAL_API_FIRST) {
       try {
-        console.log(`Attempting to fetch real matches for ${playerId}...`);
+        if (DEBUG_API_CALLS) console.log(`🔍 [DEBUGGER] Attempting to fetch real matches for ${playerId}...`);
         const realMatches = await realPlayerApi.getPlayerMatches(playerId, limit);
-        console.log(`✅ Successfully fetched real matches for ${playerId}`);
+        if (DEBUG_API_CALLS) console.log(`✅ [DEBUGGER] Successfully fetched real matches for ${playerId}`);
+        if (DEBUG_API_CALLS) console.log(`🎮 [DEBUGGER] Match data for ${playerId} (${realMatches.length} matches):`, 
+          realMatches.map(match => ({
+            id: match.id,
+            duration: `${Math.floor(match.duration / 60)}:${(match.duration % 60).toString().padStart(2, '0')}`,
+            game_mode: match.game_mode,
+            winning_team: match.winning_team,
+            player_performance: match.players.find(p => p.player_id === playerId) ? {
+              hero: match.players.find(p => p.player_id === playerId)?.hero,
+              kills: match.players.find(p => p.player_id === playerId)?.kills,
+              deaths: match.players.find(p => p.player_id === playerId)?.deaths,
+              assists: match.players.find(p => p.player_id === playerId)?.assists,
+              won: match.players.find(p => p.player_id === playerId)?.won
+            } : 'Player not found in match'
+          }))
+        );
         return realMatches;
       } catch (error) {
-        console.log(`❌ Real API failed for ${playerId} matches, falling back to mock data:`, error);
-        return mockPlayerApi.getPlayerMatches(playerId, limit);
+        if (DEBUG_API_CALLS) console.log(`❌ [DEBUGGER] Real API failed for ${playerId} matches, falling back to mock data:`, error);
+        const mockMatches = await mockPlayerApi.getPlayerMatches(playerId, limit);
+        if (DEBUG_API_CALLS) console.log(`🎮 [DEBUGGER] Mock match data for ${playerId}:`, mockMatches);
+        return mockMatches;
       }
     }
-    return mockPlayerApi.getPlayerMatches(playerId, limit);
+    const mockMatches = await mockPlayerApi.getPlayerMatches(playerId, limit);
+    console.log(`🎮 [DEBUGGER] Mock match data for ${playerId}:`, mockMatches);
+    return mockMatches;
   },
 
   getPlayerHeroStatistics: async (playerId: string): Promise<HeroStatistics[]> => {
