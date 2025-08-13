@@ -1,0 +1,1 @@
+export type Role = 'offlane' | 'jungle' | 'midlane' | 'carry' | 'support';

@@ -1,0 +1,41 @@
+meta {
+  name: Get Player Hero Statistics
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{API_URL}}/players/:player_id/hero_statistics.json
+  body: none
+  auth: inherit
+}
+
+params:query {
+  ~filter[role]: midlane
+  ~time_frame: 1Y
+}
+
+params:path {
+  player_id: {{player_id}}
+}
+
+settings {
+  encodeUrl: true
+}
+
+docs {
+  Returns general stats about the heroes of a player.
+  
+  ```txt
+  /players/{player_id}/hero_statistics.json
+  ```
+  
+  Optional arguments:
+  
+  ```txt
+  hero_ids=[{hero_id},{hero_id},...]   // takes an array of hero ids - leaving this empty returns all heroes
+  time_frame={value}                   // accepts: [1Y, 3M, 2M, 1M, 3W, 2W, 1W, 1D]
+  filter[role]={role}                  // role the player played - accepts: [offlane, jungle, midlane, carry, support]
+  ```
+  
+}
