@@ -1,0 +1,38 @@
+meta {
+  name: Get Player Statistics
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{API_URL}}/players/:player_id/statistics.json?time_frame=ALL
+  body: none
+  auth: inherit
+}
+
+params:query {
+  time_frame: ALL
+}
+
+params:path {
+  player_id: {{player_id}}
+}
+
+settings {
+  encodeUrl: true
+}
+
+docs {
+  General player statistics.
+  
+  ```txt
+  /players/{player_id}/statistics.json
+  ```
+  
+  Optional arguments:
+  
+  ```
+  time_frame={value}   // accepts: [ALL, 3M, 2M, 1M, 3W, 2W, 1W, 1D]
+  ```
+  
+}
